@@ -9,6 +9,7 @@ The project is designed to be easy to use and flexible, allowing you to easily a
 - **OpenAI API**: The project uses official OpenAI's API to generate paraphrases of texts.
 - **Multithreading**: The project uses multithreading to maximize computational efficiency for large datasets.
 - **Rate Limiting**: The project uses rate limiting to avoid exceeding OpenAI APIs usage limits.
+- **Cost Estimation**: The project estimates the cost of the API requests based on the number of tokens generated.
 
 ## Setup
 Create an account on OpenAI and get your API key.
@@ -25,6 +26,14 @@ Customize and run the `generator_example.py` script to map your OpenAI requests 
 Add an `id` field to each request to identify the request in the output file. 
 ```bash
 python3 generator_example.py --source_jsonl_path source.jsonl
+```
+
+Run the `cost_estimator.py` script to estimate the cost of the API requests based on the number of tokens generated.
+```bash
+python3 cost_estimator.py --source_jsonl_path source.jsonl
+                          --openai_model_name gpt-3.5-turbo-0125
+                          --price_per_million_tokens_input 0.50
+                          --price_per_million_tokens_output 0.50
 ```
 
 Run the `main.py` script to perform parallel requests to the OpenAI API.\
