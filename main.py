@@ -21,7 +21,7 @@ DEFAULT_MAX_CALLS_PER_MINUTE = 500
 
 @sleep_and_retry
 @limits(calls=DEFAULT_MAX_CALLS_PER_MINUTE, period=MINUTES)
-def do_openai_request(openai_client: OpenAI, request, jsonl_file_path):
+def do_openai_request(openai_client: OpenAI, request):
     try:
         response = openai_client.chat.completions.create(
             model=request['model'],
@@ -40,8 +40,7 @@ def do_openai_request(openai_client: OpenAI, request, jsonl_file_path):
             top_p=request['top_p'] if 'top_p' in request else NotGiven(),
         )
         request['response'] = json.loads(response.json())
-        with LOCK:
-            jsonl_utils.append_to_jsonl(jsonl_file_path, request)
+        return request
     except Exception as e:
         print(e)
         time.sleep(10)
@@ -53,12 +52,13 @@ if __name__ == '__main__':
     parser.add_argument('--source_jsonl_path', type=str, required=True)
     parser.add_argument('--output_jsonl_path', type=str, required=True)
     parser.add_argument('--max_calls_per_minute', type=int, default=DEFAULT_MAX_CALLS_PER_MINUTE)
-    parser.add_argument('--n_thread', type=int, default=DEFAULT_N_THREADS)
+    parser.add_argument('--n_threads', type=int, default=DEFAULT_N_THREADS)
     parser.add_argument('--shuffle', type=bool, default=False)
     args = parser.parse_args()
 
     # Customize the rate limiting decorator based on the user input
-    do_openai_request.limits = (args.max_calls_per_minute, MINUTES)
+    do_openai_request = limits(calls=args.max_calls_per_minute, period=MINUTES)(do_openai_request)
+    do_openai_request = sleep_and_retry(do_openai_request)
 
     # Initialize the OpenAI client
     client = OpenAI(api_key=args.openai_api_key)
@@ -77,5 +77,7 @@ if __name__ == '__main__':
         random.shuffle(requests)
 
     # Process the requests
-    with ThreadPoolExecutor(args.n_thread) as p:
-        p.map(lambda request: do_openai_request(client, request, args.output_jsonl_path), requests)
+    with ThreadPoolExecutor(args.n_threads) as p:
+        for result in p.map(lambda request: do_openai_request(client, request, args.output_jsonl_path), requests):
+            with LOCK:
+                jsonl_utils.append_to_jsonl(args.output_jsonl_path, result)

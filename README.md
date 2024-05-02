@@ -24,7 +24,7 @@ pip install -r requirements.txt
 Customize and run the `generator_example.py` script to map your OpenAI requests into the `source.jsonl` file.\
 Add an `id` field to each request to identify the request in the output file. 
 ```bash
-python3 generator_example.py 
+python3 generator_example.py --source_jsonl_path source.jsonl
 ```
 
 Run the `main.py` script to perform parallel requests to the OpenAI API.\
@@ -34,10 +34,9 @@ python3 main.py --api_key YOUR_API_KEY
                 --source_jsonl_path source.jsonl
                 --output_jsonl_path output.jsonl 
                 --max_calls_per_minute 400
-                --n_thread 4
+                --n_threads 4
                 --shuffle
 ```
-
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
