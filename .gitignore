@@ -1,0 +1,11 @@
+.idea
+
+venv
+.venv
+
+*.pyc
+__pycache__
+
+*.jsonl
+
+
