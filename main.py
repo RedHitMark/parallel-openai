@@ -79,5 +79,7 @@ if __name__ == '__main__':
     # Process the requests
     with ThreadPoolExecutor(args.n_threads) as p:
         for result in p.map(lambda request: do_openai_request(client, request), requests):
+            if result is None:
+                continue
             with LOCK:
                 jsonl_utils.append_to_jsonl(args.output_jsonl_path, result)
